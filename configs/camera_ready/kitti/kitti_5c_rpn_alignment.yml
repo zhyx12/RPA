@@ -1,0 +1,110 @@
+model:
+  base_model:
+    model:
+      name: rpnclusteralignvgg16
+      class_agnostic: false
+      adain_layer: [1,2]
+      cluster_num: 2
+      src_metric_type: cos_similarity
+      tgt_metric_type: cos_similarity
+      trainable_center: true
+      use_cam_mask: true
+    optimizer:
+      name: 'sgd'
+      lr: 0.001
+      weight_decay: 0.0005
+      momentum: 0.9
+  dis_1:
+    model:
+      name: det_dis_1
+    optimizer:
+      name: 'adam'
+      lr: 1.0e-4
+      betas: [0.9,0.999]
+  dis_2:
+    model:
+      name: det_dis_2_conv
+    optimizer:
+      name: 'adam'
+      lr: 1.0e-4
+      betas: [0.9,0.999]
+  dis_3:
+    model:
+      name: det_dis_3_conv
+    optimizer:
+      name: 'adam'
+      lr: 1.0e-4
+      betas: [0.9,0.999]
+  dis_inst:
+    model:
+      name: det_dis_inst
+      fc_size: 4096
+    optimizer:
+      name: 'adam'
+      lr: 1.0e-4
+      betas: [0.9,0.999]
+  lr_scheduler:
+    name: multi_step
+    milestones: [50000,]
+dataset:
+  n_workers: 0
+  train:
+    batch_size: 1
+    1:
+      name: cityscapes_5c
+      split: train
+    2:
+      name: kitti_5c
+      split: train
+  test:
+    batch_size: 1
+    1:
+      name: kitti_5c
+      split: train
+training:
+  max_iters: 81000
+  update_iter: 1
+  val_interval:
+    25000: 5000
+    81000: 3000
+  save_interval: 2000
+  max_save_num: 1
+  log_interval: 200
+  #
+  class_agnostic: false
+  lambda_adv_1: 1.0
+  lambda_adv_2: 1.0
+  lambda_adv_3: 1.0
+  lambda_adv_inst: 0.0
+  lambda_tgt_structure: 0.1
+  lambda_src_align: 0.1
+  #
+  src_align_start_iteration: 25000
+  tgt_align_start_iteration: 25000
+  kmeans_dist: cos
+  init_center_for_cluster: true
+  #
+  use_cluster_align: true
+  assign_center_feat: true
+  assign_once: true
+  #
+  use_val_as_train: true
+#control:
+#  random_seed: 1234
+config_dict:
+  TRAIN:
+    HAS_RPN: True
+    BBOX_NORMALIZE_TARGETS_PRECOMPUTED: True
+    RPN_POSITIVE_OVERLAP: 0.7
+    RPN_BATCHSIZE: 256
+    PROPOSAL_METHOD: gt
+    BG_THRESH_LO: 0.0
+    BATCH_SIZE: 256
+    RPN_POST_NMS_TOP_N_TARGET: 256
+  TEST:
+    HAS_RPN: True
+  POOLING_MODE: align
+  CROP_RESIZE_WITH_MAX_POOL: False
+  ANCHOR_SCALES: [8, 16, 32]
+  ANCHOR_RATIOS: [0.5,1,2]
+  MAX_NUM_GT_BOXES: 30
